@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>A-Frame VR/AR Image Video Trigger</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aframe/1.4.2/aframe.min.js"></script>
+  <script>
+    // Componente personalizado para reproducir video al apuntar a una imagen
+    AFRAME.registerComponent('video-trigger', {
+      schema: {
+        target: {type: 'selector'}, // El elemento video que queremos controlar
+        image: {type: 'selector'}, // La imagen que sirve como trigger
+      },
+      
+      init: function() {
+        var data = this.data;
+        var el = this.el;
+        var videoEl = data.target;
+        
+        // Asegurarnos que el video esté pausado inicialmente
+        if (videoEl) {
+          videoEl.pause();
+          videoEl.currentTime = 0;
+        }
+        
+        // Evento cuando el cursor apunta a la imagen
+        this.el.addEventListener('mouseenter', function() {
+          if (videoEl && videoEl.paused) {
+            videoEl.play();
+            console.log("Reproduciendo video");
+          }
+        });
+        
+        // Evento cuando el cursor deja de apuntar a la imagen
+        this.el.addEventListener('mouseleave', function() {
+          if (videoEl && !videoEl.paused) {
+            videoEl.pause();
+            console.log("Pausando video");
+          }
+        });
+      }
+    });
+    
+    // Componente para el cursor/raycaster
+    AFRAME.registerComponent('raycaster-autorefresh', {
+      init: function () {
+        var el = this.el;
+        // Refrescar el raycaster cada vez que la escena cambie
+        this.el.addEventListener('object3dset', function () {
+          var raycaster = el.components.raycaster;
+          raycaster.refreshObjects();
+        });
+      }
+    });
+  </script>
+</head>
+<body>
+  <a-scene>
+    <!-- Carga de assets -->
+    <a-assets>
+      <!-- Imagen trigger -->
+      <img id="imagen-trigger" src="ruta-a-tu-imagen.jpg" crossorigin="anonymous">
+      
+      <!-- Video a reproducir -->
+      <video id="video-reproducir" src="ruta-a-tu-video.mp4" preload="auto" loop crossorigin="anonymous"></video>
+    </a-assets>
+    
+    <!-- Cámara y cursor para interacción -->
+    <a-entity camera position="0 1.6 0" look-controls>
+      <a-entity cursor="fuse: true; fuseTimeout: 500"
+                position="0 0 -1"
+                geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
+                material="color: white; shader: flat"
+                raycaster="objects: .raycastable; far: 100"
+                raycaster-autorefresh>
+      </a-entity>
+    </a-entity>
+    
+    <!-- Plano con la imagen que activará el video -->
+    <a-image src="#imagen-trigger" 
+             position="0 1.5 -3" 
+             width="2" height="1.5"
+             class="raycastable"
+             video-trigger="target: #video-reproducir; image: #imagen-trigger">
+    </a-image>
+    
+    <!-- Plano donde se reproducirá el video cuando se mire la imagen -->
+    <a-video src="#video-reproducir" 
+             width="4" height="2.25"
+             position="0 1.5 -5"
+             visible="true">
+    </a-video>
+    
+    <!-- Ambiente básico -->
+    <a-sky color="#ECECEC"></a-sky>
+    <a-entity light="type: ambient; color: #BBB"></a-entity>
+    <a-entity light="type: directional; color: #FFF; intensity: 0.6" position="-0.5 1 1"></a-entity>
+  </a-scene>
+</body>
+</html>
